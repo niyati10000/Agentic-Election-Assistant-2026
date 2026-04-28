@@ -90,6 +90,11 @@ This solution was engineered to excel in the following areas:
 - **Gemini 2.0 Flash**: Leverages the high-speed reasoning of Gemini 2.0 to power the "Inner Monologue" and ReAct loop.
 
 ---
+## Deployed link
+
+link: https://agentic-assistant-drhhk8qgaf5hssryi6meyb.streamlit.app/
+
+<img width="1912" height="853" alt="image" src="https://github.com/user-attachments/assets/2be14798-1e54-4eb9-929f-54e7166f0684" />
 
 ## 📋 Example Interactions
 
