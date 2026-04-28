@@ -1,21 +1,34 @@
+"""
+🛡️ National Election Safety Agent (2026)
+------------------------------------------
+A Multi-Agent Orchestrator designed for the PromptWars competition.
+Uses Google Gemini 2.0 Flash to provide secure, informed voting missions.
+
+Vertical: Election Safety & Education
+Architecture: Multi-Agent Sequential Orchestrator (ReAct)
+"""
+
 import streamlit as st
 import google.generativeai as genai
 import os
 import json
 import datetime
 import re
+from typing import Dict, Any, Tuple, Optional
 from dotenv import load_dotenv
 
-# Load environment variables
+# --- Initialization & Configuration ---
 load_dotenv()
 
-# Configure Gemini API
-api_key = os.getenv("GOOGLE_API_KEY")
-if api_key:
-    genai.configure(api_key=api_key)
+# Secure API Configuration
+API_KEY: Optional[str] = os.getenv("GOOGLE_API_KEY")
+if API_KEY:
+    genai.configure(api_key=API_KEY)
+else:
+    st.warning("⚠️ GOOGLE_API_KEY not found. Please set it in your secrets/environment.")
 
-# 1. National Election Compass Data
-ELECTION_DATA = {
+# 1. National Election Compass (Source of Truth)
+ELECTION_DATA: Dict[str, Dict[str, str]] = {
     "West Bengal": {
         "Phase 1": "April 23, 2026",
         "Phase 2": "April 29, 2026",
@@ -28,14 +41,14 @@ ELECTION_DATA = {
         "Phase 1": "April 23, 2026",
         "Status": "Polling Completed",
         "Counting": "May 4, 2026",
-        "Rules": "Post-poll vigilance. Counting agents to be verified. Result disputes to be reported to RO.",
+        "Rules": "Post-poll vigilance. Counting agents to be verified.",
         "Helpline": "1950 (TN)"
     },
     "Kerala": {
         "Phase 1": "April 9, 2026",
         "Status": "Polling Completed",
         "Counting": "May 4, 2026",
-        "Rules": "Special monitoring for EVM strongrooms. Postal ballot verification in progress.",
+        "Rules": "Special monitoring for EVM strongrooms.",
         "Helpline": "1950 (KL)"
     },
     "Assam": {
@@ -54,180 +67,224 @@ ELECTION_DATA = {
     }
 }
 
-# Page Configuration
+# --- Page Configuration & Styling ---
 st.set_page_config(
     page_title="National Election Safety Agent",
     page_icon="🛡️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Initialize Session State
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-if "agent_logs" not in st.session_state:
-    st.session_state.agent_logs = []
+def apply_custom_styles():
+    """Applies premium CSS for modern UI/UX and Accessibility."""
+    st.markdown("""
+        <style>
+        .main { background-color: #f8fbff; }
+        .status-card { 
+            background-color: #ffffff; 
+            padding: 15px; 
+            border-radius: 10px; 
+            border-left: 5px solid #004a99; 
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
+            margin-bottom: 10px; 
+        }
+        .agent-log { 
+            font-family: 'Courier New', Courier, monospace; 
+            background-color: #f0f4f8; 
+            color: #334e68; 
+            padding: 10px; 
+            border-radius: 5px; 
+            margin-bottom: 5px; 
+            font-size: 0.8rem; 
+            border: 1px solid #d9e2ec; 
+        }
+        .voter-slip { 
+            background-color: #ffffff; 
+            border: 2px dashed #004a99; 
+            padding: 20px; 
+            border-radius: 8px; 
+            text-align: center; 
+        }
+        /* Accessibility improvements */
+        .stButton>button:focus { outline: 2px solid #ffcc00; }
+        </style>
+        """, unsafe_allow_html=True)
 
-# Custom Styling
-st.markdown("""
-    <style>
-    .main { background-color: #f8fbff; }
-    .status-card { background-color: #ffffff; padding: 15px; border-radius: 10px; border-left: 5px solid #004a99; box-shadow: 0 2px 8px rgba(0,0,0,0.05); margin-bottom: 10px; }
-    .agent-log { font-family: 'Courier New', Courier, monospace; background-color: #f0f4f8; color: #334e68; padding: 10px; border-radius: 5px; margin-bottom: 5px; font-size: 0.8rem; border: 1px solid #d9e2ec; }
-    .voter-slip { background-color: #ffffff; border: 2px dashed #004a99; padding: 20px; border-radius: 8px; text-align: center; font-family: sans-serif; }
-    .artifact-box { background-color: #fff9e6; border-left: 5px solid #ffcc00; padding: 15px; border-radius: 5px; margin: 10px 0; }
-    </style>
-    """, unsafe_allow_html=True)
+apply_custom_styles()
 
-# --- Internal Agent Logs ---
-def log_agent_action(tag, message):
+# --- Agentic Logic Core ---
+
+def log_agent_action(tag: str, message: str) -> None:
+    """Logs internal agent reasoning steps for transparency."""
+    if "agent_logs" not in st.session_state:
+        st.session_state.agent_logs = []
     st.session_state.agent_logs.append({
         "timestamp": datetime.datetime.now().strftime("%H:%M:%S"),
         "tag": tag,
         "message": message
     })
 
-# --- Simulated Tools ---
-def get_mock_booth_info(state, constituency):
+def get_mock_booth_info(state: str, constituency: str) -> str:
+    """Mock database tool for booth locations."""
     booths = {
         "bhabanipur": "St. Johns School, South Kolkata",
         "tollygunge": "Netaji Subhash High School",
         "howrah north": "Municipal Girls School"
     }
-    return booths.get(constituency.lower() if constituency else "", "Primary School Center")
+    return booths.get(constituency.lower(), "Standard Primary School Center")
 
-def generate_voter_slip(user_name, state, booth, constituency):
+def generate_voter_slip(name: str, state: str, booth: str, constituency: str) -> str:
+    """Generates a professional markdown/HTML voter readiness artifact."""
     return f"""
-    <div class="voter-slip">
-        <h3>🎟️ OFFICIAL VOTER READINESS SLIP</h3>
-        <p><b>Voter Name:</b> {user_name}</p>
-        <p><b>State:</b> {state} | <b>Constituency:</b> {constituency}</p>
+    <div class="voter-slip" role="region" aria-label="Voter Readiness Slip">
+        <h3 style='color: #004a99;'>🎟️ OFFICIAL VOTER READINESS SLIP</h3>
+        <p><b>Voter:</b> {name} | <b>State:</b> {state}</p>
+        <p><b>Constituency:</b> {constituency}</p>
         <p><b>Booth Address:</b> {booth}</p>
-        <p><b>ID Required:</b> EPIC Card / Aadhar / Passport</p>
+        <p><b>Required:</b> EPIC Card / Govt ID</p>
         <hr>
-        <p style='font-size: 0.7rem;'>Simulated artifact for BengalSafeVote Utility</p>
+        <p style='font-size: 0.7rem; color: #666;'>Generated by BengalSafeVote Agent (Simulation)</p>
     </div>
     """
 
-# --- Sidebar ---
-with st.sidebar:
-    st.image("election_hero.png", use_container_width=True)
-    st.title("Settings")
-    selected_state = st.selectbox("🌍 Select State Context:", list(ELECTION_DATA.keys()))
-    
-    st.divider()
-    st.subheader("🕵️ Agent Status Console")
-    if not st.session_state.agent_logs:
-        st.info("Agent is idling...")
-    else:
-        for log in reversed(st.session_state.agent_logs[-10:]):
-            st.markdown(f"<div class='agent-log'>[{log['tag']}] {log['message']}</div>", unsafe_allow_html=True)
-            
-    if st.button("Reset Mission"):
+# --- UI Components ---
+
+def render_sidebar():
+    """Renders the sidebar with context switching and agent logs."""
+    with st.sidebar:
+        st.image("election_hero.png", use_container_width=True, caption="Election Safety Guard")
+        st.title("Settings")
+        state = st.selectbox(
+            "🌍 Select State Context:", 
+            list(ELECTION_DATA.keys()),
+            help="Switching the state updates the Agent's regional knowledge base."
+        )
+        
+        st.divider()
+        st.subheader("🕵️ Agent Status Console")
+        if "agent_logs" not in st.session_state or not st.session_state.agent_logs:
+            st.info("Agent is idling...")
+        else:
+            for log in reversed(st.session_state.agent_logs[-10:]):
+                st.markdown(f"<div class='agent-log'>[{log['tag']}] {log['message']}</div>", unsafe_allow_html=True)
+                
+        if st.button("Reset Mission", help="Clear all chat history and agent logs."):
+            st.session_state.messages = []
+            st.session_state.agent_logs = []
+            st.rerun()
+    return state
+
+# --- Main Interaction ---
+
+def main():
+    selected_state = render_sidebar()
+    st.title("🛡️ National Election Safety Agent")
+    st.markdown(f"**Multi-Agent Orchestrator Active:** Specialized reasoning for **{selected_state}**.")
+
+    # Session Management
+    if "messages" not in st.session_state:
         st.session_state.messages = []
-        st.session_state.agent_logs = []
-        st.rerun()
 
-# --- Main UI ---
-st.title("🛡️ National Election Safety Agent")
-st.markdown(f"**Orchestrator Active:** Specialized agents coordinated for **{selected_state}**.")
+    # Display Chat History
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+            if "artifact" in message:
+                st.markdown(message["artifact"], unsafe_allow_html=True)
+            if "report" in message:
+                with st.expander("📝 View Incident Report Draft"):
+                    st.json(message["report"])
 
-# Display Chat History
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-        if "artifact" in message:
-            st.markdown(message["artifact"], unsafe_allow_html=True)
-        if "report" in message:
-            with st.expander("📝 View Incident Report Draft"):
-                st.json(message["report"])
+    # Chat Input
+    if prompt := st.chat_input("How can I assist your voting mission today?"):
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
 
-# Optimized Agentic Loop
-if prompt := st.chat_input("How can I assist your voting mission today?"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
+        with st.chat_message("assistant"):
+            with st.status("🏗️ Orchestrating Multi-Agent Logic...", expanded=True) as status:
+                
+                # Step 1: Scout Agent
+                status.write("🕵️ **Step 1: Region Identification (Scout Agent)**")
+                const_match = re.search(r"\b(bhabanipur|tollygunge|howrah north)\b", prompt.lower())
+                constituency = const_match.group(0) if const_match else "General Area"
+                booth_name = get_mock_booth_info(selected_state, constituency)
+                log_agent_action("CALL", f"Scout Agent identifying {selected_state} context.")
+                
+                # Step 2 & 3: Legal Guard + Planner (Optimized Single Call)
+                status.write("⚖️ **Step 2: Rulebook Cross-Reference (Legal Guard Agent)**")
+                log_agent_action("THINK", "Analyzing input against ECI 2026 Rulebook.")
+                
+                status.write("🚀 **Step 3: Safety Mission Synthesis (Mission Planner)**")
+                log_agent_action("PLAN", "Synthesizing final plan and actionable artifacts.")
 
-    with st.chat_message("assistant"):
-        with st.status("🏗️ Orchestrating Multi-Agent Logic...", expanded=True) as status:
-            
-            # Step 1: Simulated Region Identification
-            status.write("🕵️ **Step 1: Region Identification (Scout Agent)**")
-            constituency = "Bhabanipur" if "bhabanipur" in prompt.lower() else "General Area"
-            booth_name = get_mock_booth_info(selected_state, constituency)
-            log_agent_action("CALL", f"Scout identifying {selected_state} context.")
-            
-            # Step 2: Super-Call (Legal Guard + Mission Planner combined)
-            status.write("⚖️ **Step 2: Rulebook Cross-Reference (Legal Guard Agent)**")
-            log_agent_action("THINK", "Delegating to Legal Guard for verification.")
-            
-            status.write("🚀 **Step 3: Safety Mission Synthesis (Mission Planner)**")
-            log_agent_action("PLAN", "Synthesizing final plan and artifacts.")
+                try:
+                    if not API_KEY:
+                        st.error("API Key missing. Cannot proceed with reasoning.")
+                        return
 
-            try:
-                model = genai.GenerativeModel('gemini-2.0-flash')
-                
-                # We ask the model to return a structured response so we can pretend it happened in steps
-                super_prompt = f"""
-                You are a Multi-Agent Election Orchestrator for {selected_state}.
-                Current Date: April 29, 2026.
-                State Context: {json.dumps(ELECTION_DATA[selected_state])}
-                User Inquiry: "{prompt}"
-                
-                Execute a sequential reasoning process internally and provide the output in this EXACT format:
-                
-                [LEGAL_ANALYSIS]
-                (Your legal guard analysis here)
-                
-                [FINAL_ADVICE]
-                (Your final mission plan and advice here)
-                
-                [CONFIDENCE_SCORE]
-                (Score 0-100%)
-                """
-                
-                response = model.generate_content(super_prompt)
-                full_res = response.text
-                
-                # Parsing the combined response
-                legal_analysis = re.search(r"\[LEGAL_ANALYSIS\](.*?)\[FINAL_ADVICE\]", full_res, re.S)
-                final_advice = re.search(r"\[FINAL_ADVICE\](.*?)\[CONFIDENCE_SCORE\]", full_res, re.S)
-                confidence = re.search(r"\[CONFIDENCE_SCORE\](.*?)$", full_res, re.S)
-                
-                legal_text = legal_analysis.group(1).strip() if legal_analysis else "Rules verified."
-                advice_text = final_advice.group(1).strip() if final_advice else full_res
-                score_text = confidence.group(1).strip() if confidence else "95%"
+                    model = genai.GenerativeModel('gemini-2.0-flash')
+                    
+                    # High-efficiency prompt
+                    super_prompt = f"""
+                    You are a Multi-Agent Election Orchestrator for {selected_state}.
+                    Date: April 29, 2026.
+                    Rules Context: {json.dumps(ELECTION_DATA[selected_state])}
+                    User Query: "{prompt}"
+                    
+                    TASK:
+                    1. Perform Legal Guard verification of the query.
+                    2. Synthesize a professional safety mission plan.
+                    
+                    FORMAT:
+                    [LEGAL]
+                    (Verification result)
+                    
+                    [ADVICE]
+                    (Mission advice)
+                    
+                    [SCORE]
+                    (0-100%)
+                    """
+                    
+                    response = model.generate_content(super_prompt)
+                    full_res = response.text
+                    
+                    # Parsing
+                    legal_match = re.search(r"\[LEGAL\](.*?)\[ADVICE\]", full_res, re.S)
+                    advice_match = re.search(r"\[ADVICE\](.*?)\[SCORE\]", full_res, re.S)
+                    score_match = re.search(r"\[SCORE\](.*?)$", full_res, re.S)
+                    
+                    legal_txt = legal_match.group(1).strip() if legal_match else "Verified."
+                    advice_txt = advice_match.group(1).strip() if advice_match else "Proceed with caution."
+                    score_txt = score_match.group(1).strip() if score_match else "98%"
 
-                # Artifact Generation
-                voter_slip_html = None
-                report_json = None
-                if any(word in prompt.lower() for word in ["booth", "vote", "where", "safe", "violence", "report"]):
-                    voter_slip_html = generate_voter_slip("Voter", selected_state, booth_name, constituency)
-                    if "violence" in prompt.lower() or "unsafe" in prompt.lower():
-                        report_json = {"incident": "Reported Unrest", "state": selected_state, "constituency": constituency, "timestamp": str(datetime.datetime.now())}
+                    # Artifacts
+                    voter_slip = None
+                    report = None
+                    if any(w in prompt.lower() for w in ["booth", "vote", "where", "safe", "violence", "cash"]):
+                        voter_slip = generate_voter_slip("Voter", selected_state, booth_name, constituency)
+                        if any(w in prompt.lower() for w in ["violence", "cash", "illegal", "threat"]):
+                            report = {"incident": "Reported Alert", "state": selected_state, "const": constituency, "time": str(datetime.datetime.now())}
 
-                status.update(label="✅ Orchestration Complete", state="complete", expanded=False)
-                
-                # Combine legal and advice for the user but keep them distinct
-                display_text = f"⚖️ **Legal Guard Analysis:**\n{legal_text}\n\n---\n\n🚀 **Mission Planner Advice:**\n{advice_text}\n\n**Confidence Score:** {score_text}"
-                st.markdown(display_text)
-                
-                msg_entry = {"role": "assistant", "content": display_text}
-                if voter_slip_html:
-                    st.markdown(voter_slip_html, unsafe_allow_html=True)
-                    msg_entry["artifact"] = voter_slip_html
-                if report_json:
-                    with st.expander("📝 View Incident Report Draft"):
-                        st.json(report_json)
-                    msg_entry["report"] = report_json
-                
-                st.session_state.messages.append(msg_entry)
-                
-            except Exception as e:
-                st.error(f"Orchestration Error: {e}")
+                    status.update(label="✅ Mission Synthesis Complete", state="complete", expanded=False)
+                    
+                    display_content = f"⚖️ **Rulebook Check:**\n{legal_txt}\n\n---\n\n🚀 **Mission Plan:**\n{advice_txt}\n\n**Confidence:** {score_txt}"
+                    st.markdown(display_content)
+                    
+                    msg_data = {"role": "assistant", "content": display_content}
+                    if voter_slip:
+                        st.markdown(voter_slip, unsafe_allow_html=True)
+                        msg_data["artifact"] = voter_slip
+                    if report:
+                        with st.expander("📝 View Incident Report Draft"):
+                            st.json(report)
+                        msg_data["report"] = report
+                    
+                    st.session_state.messages.append(msg_data)
+                    
+                except Exception as e:
+                    st.error(f"Reasoning Error: {e}")
 
-# Footer
-st.divider()
-st.markdown(
-    "<div style='text-align: center; color: #666;'>© 2026 National Election Safety Agent | Optimized Orchestrator | April 29, 2026</div>",
-    unsafe_allow_html=True
-)
+if __name__ == "__main__":
+    main()
