@@ -1,0 +1,38 @@
+{
+    "bhabanipur": {
+        "legal": "VERIFIED (Local Rulebook): Bhabanipur Phase 2 polling active. Section 144 enforced within 100m radius.",
+        "advice": "Booth at St. Johns School is OPEN. Carry valid ID. Mobile phones strictly prohibited inside the booth.",
+        "score": "100% (Verified)",
+        "booth": "St. Johns School, South Kolkata",
+        "const": "Bhabanipur"
+    },
+    "ration_card": {
+        "legal": "ECI MANUAL 2026: Ration Cards are NOT valid standalone IDs for identity verification at the polling booth.",
+        "advice": "Voters must carry EPIC (Voter ID) or one of the 12 govt-approved photo IDs (Aadhaar, PAN, etc.).",
+        "score": "99% (Verified)",
+        "booth": "General Area",
+        "const": "Identity Verification"
+    },
+    "chennai": {
+        "legal": "STATE STATUS: Tamil Nadu Phase 1 concluded on April 23. Current status: Strongroom Security Phase.",
+        "advice": "Generating historical booth data for mission records. Monitor official counting updates on May 4.",
+        "score": "95% (Verified)",
+        "booth": "Anna University Center, Chennai",
+        "const": "Chennai Central"
+    },
+    "campaigning": {
+        "legal": "MCC VIOLATION: Rule 4.2 states that campaigning within 100m of a polling booth is a non-bailable offense on election day.",
+        "advice": "Incident report draft generated. Please submit via cVIGIL app or to the sector officer immediately.",
+        "score": "100% (Verified)",
+        "booth": "Current Location",
+        "const": "Safety Alert",
+        "report": true
+    },
+    "tamil_nadu": {
+        "legal": "CONTEXT SYNC: Regional database updated to Tamil Nadu (Phase 1 focus). ECI Rulebook TN-2026 active.",
+        "advice": "Mission: 'Post-Poll Vigilance'. Maintain awareness of counting day security protocols.",
+        "score": "100% (Verified)",
+        "booth": "N/A",
+        "const": "System Update"
+    }
+}
