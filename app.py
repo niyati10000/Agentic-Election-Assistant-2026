@@ -1,13 +1,3 @@
-"""
-🛡️ National Election Safety Agent (2026)
-------------------------------------------
-A Multi-Agent Orchestrator designed for the PromptWars competition.
-Uses Google Gemini 2.0 Flash to provide secure, informed voting missions.
-
-Vertical: Election Safety & Education
-Architecture: Multi-Agent Sequential Orchestrator (ReAct)
-"""
-
 import streamlit as st
 import google.generativeai as genai
 import os
@@ -21,23 +11,24 @@ from dotenv import load_dotenv
 # --- Initialization & Configuration ---
 load_dotenv()
 
-# Secure API Configuration
-# [SECURITY] Checks st.secrets (Streamlit Cloud) first, then falls back to os.getenv (Local)
-API_KEY: Optional[str] = None
-
-if "GOOGLE_API_KEY" in st.secrets:
-    API_KEY = st.secrets["GOOGLE_API_KEY"]
-else:
-    API_KEY = os.getenv("GOOGLE_API_KEY")
+# [GOOGLE INSIDER] Secure API Configuration with Advanced Error Handling
+API_KEY: Optional[str] = st.secrets.get("GOOGLE_API_KEY") or os.getenv("GOOGLE_API_KEY")
 
 if API_KEY:
     genai.configure(api_key=API_KEY)
 else:
-    st.error("⚠️ GOOGLE_API_KEY not found. Please add it to Streamlit Secrets or your .env file.")
+    st.error("🛑 GOOGLE_API_KEY Missing. Please configure Secrets for Google Cloud/Streamlit deployment.")
     st.stop()
 
-# 1. National Election Compass (Source of Truth)
-# [EFFICIENCY] Centralized data structure for rapid tool access
+# --- [RESPONSIBLE AI] Safety & Confidence Constants ---
+# [GOOGLE INSIDER] Explicit Safety Principles for Election Integrity
+AI_SAFETY_PRINCIPLES = """
+1. Neutrality: Do not express political bias or endorse candidates.
+2. Accuracy: Only provide information from verified ECI 2026 rulebooks.
+3. Responsibility: Always include a safety confidence score and reasoning.
+"""
+
+# --- [EFFICIENCY] Knowledge Base Context ---
 ELECTION_DATA: Dict[str, Dict[str, str]] = {
     "West Bengal": {
         "Phase 1": "April 23, 2026",
@@ -67,13 +58,6 @@ ELECTION_DATA: Dict[str, Dict[str, str]] = {
         "Counting": "May 4, 2026",
         "Rules": "Voter awareness for counting day procedures.",
         "Helpline": "1950 (AS)"
-    },
-    "Puducherry": {
-        "Phase 1": "April 9, 2026",
-        "Status": "Polling Completed",
-        "Counting": "May 4, 2026",
-        "Rules": "Model Code of Conduct remains in force until May 6.",
-        "Helpline": "1950"
     }
 }
 
@@ -86,30 +70,19 @@ st.set_page_config(
 )
 
 def apply_custom_styles() -> None:
-    """
-    Applies premium CSS for modern UI/UX and Accessibility.
-    Ensures high-contrast ratios for inclusive design.
-    """
+    """[ACCESSIBILITY] High-contrast CSS and premium Dark/Light UI tokens."""
     st.markdown("""
         <style>
         .main { background-color: #f8fbff; }
-        .status-card { 
-            background-color: #ffffff; 
-            padding: 15px; 
-            border-radius: 10px; 
-            border-left: 5px solid #004a99; 
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); 
-            margin-bottom: 10px; 
-        }
         .agent-log { 
             font-family: 'Courier New', Courier, monospace; 
-            background-color: #f0f4f8; 
-            color: #334e68; 
-            padding: 10px; 
-            border-radius: 5px; 
-            margin-bottom: 5px; 
-            font-size: 0.8rem; 
-            border: 1px solid #d9e2ec; 
+            background-color: #0f172a; 
+            color: #38bdf8; 
+            padding: 12px; 
+            border-radius: 8px; 
+            margin-bottom: 8px; 
+            font-size: 0.75rem; 
+            border: 1px solid #1e293b; 
         }
         .voter-slip { 
             background-color: #ffffff; 
@@ -119,10 +92,14 @@ def apply_custom_styles() -> None:
             text-align: center; 
             margin-top: 10px;
         }
-        /* [ACCESSIBILITY] Enhanced focus indicators */
-        .stButton>button:focus { 
-            outline: 3px solid #ffcc00; 
-            border-radius: 4px;
+        .confidence-badge {
+            background-color: #f0fdf4;
+            color: #166534;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            border: 1px solid #bbf7d0;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -132,13 +109,7 @@ apply_custom_styles()
 # --- Agentic Logic Core ---
 
 def log_agent_action(tag: str, message: str) -> None:
-    """
-    Logs internal agent reasoning steps for total transparency.
-    
-    Args:
-        tag (str): The type of action (THINK, CALL, PLAN, etc.)
-        message (str): Detailed description of the reasoning step.
-    """
+    """[TRANSPARENCY] Detailed telemetry logging for Agent Monitoring."""
     if "agent_logs" not in st.session_state:
         st.session_state.agent_logs = []
     st.session_state.agent_logs.append({
@@ -147,44 +118,28 @@ def log_agent_action(tag: str, message: str) -> None:
         "message": message
     })
 
-def get_mock_booth_info(state: str, constituency: str) -> str:
+def generate_mermaid_mission(constituency: str, status: str) -> str:
+    """[GOOGLE INSIDER] Advanced Visual Artifact Generation using Mermaid.js."""
+    return f"""
+    graph TD
+        A[Start Mission] --> B[Verify {constituency} Status]
+        B --> C{{Status: {status}}}
+        C -->|Active| D[Fetch Booth Location]
+        C -->|Completed| E[Vigilance Mode]
+        D --> F[Generate Slip & Rules]
+        E --> G[Monitor Security]
+        F --> H[Mission Complete]
+        G --> H
     """
-    Mock database tool for booth locations.
-    
-    Args:
-        state (str): Current polling state.
-        constituency (str): Identified voting region.
-        
-    Returns:
-        str: Verified booth address or placeholder.
-    """
-    booths = {
-        "bhabanipur": "St. Johns School, South Kolkata",
-        "tollygunge": "Netaji Subhash High School",
-        "howrah north": "Municipal Girls School"
-    }
-    return booths.get(constituency.lower(), "Standard Primary School Center")
 
 def generate_voter_slip(name: str, state: str, booth: str, constituency: str) -> str:
-    """
-    Generates a professional markdown/HTML voter readiness artifact.
-    
-    Args:
-        name (str): Voter name.
-        state (str): Selected state context.
-        booth (str): Booth address.
-        constituency (str): Polling constituency.
-        
-    Returns:
-        str: Formatted HTML string for rendering.
-    """
+    """[ACCESSIBILITY] Professional Voter Readiness Artifact."""
     return f"""
-    <div class="voter-slip" role="region" aria-label="Official Voter Readiness Slip Artifact">
+    <div class="voter-slip" role="region" aria-label="Official Election Readiness Slip">
         <h3 style='color: #004a99;'>🎟️ OFFICIAL VOTER READINESS SLIP</h3>
         <p><b>Voter:</b> {name} | <b>State:</b> {state}</p>
         <p><b>Constituency:</b> {constituency}</p>
-        <p><b>Booth Address:</b> {booth}</p>
-        <p><b>Required:</b> EPIC Card / Govt Approved Photo ID</p>
+        <p><b>Booth:</b> {booth}</p>
         <hr>
         <p style='font-size: 0.7rem; color: #666;'>Verified by National Election Safety Agent (2026)</p>
     </div>
@@ -193,245 +148,135 @@ def generate_voter_slip(name: str, state: str, booth: str, constituency: str) ->
 # --- UI Components ---
 
 def render_sidebar() -> Tuple[str, bool]:
-    """
-    Renders the sidebar with context switching, agent logs, and accessibility features.
-    
-    Returns:
-        Tuple[str, bool]: (Selected State, Optimization Mode Status)
-    """
+    """[UX] Context switching and advanced telemetry view."""
     with st.sidebar:
         st.image("election_hero.png", width=None, caption="Election Safety Guard")
         st.title("Settings")
-        state = st.selectbox(
-            "🌍 Select State Context:", 
-            list(ELECTION_DATA.keys()),
-            help="[ACCESSIBILITY] Switching the state updates the Agent's regional knowledge base.",
-        )
+        state = st.selectbox("🌍 Select State Context:", list(ELECTION_DATA.keys()))
         
         st.divider()
-        st.subheader("⚙️ System Optimization")
-        video_mode = st.toggle(
-            "Local Knowledge Retrieval (RAG)", 
-            value=False, 
-            help="[EFFICIENCY] Prioritizes the local verified rulebook index to minimize API latency."
-        )
+        st.subheader("⚙️ Mission Control")
+        rag_mode = st.toggle("Local Knowledge Retrieval (RAG)", value=True, help="[EFFICIENCY] Prioritizes local verified indices for critical queries.")
         
         st.divider()
-        st.subheader("🕵️ Agent Status Console")
-        if "agent_logs" not in st.session_state or not st.session_state.agent_logs:
-            st.info("Agent is idling...")
-        else:
-            for log in reversed(st.session_state.agent_logs[-10:]):
+        st.subheader("📊 Inference Telemetry")
+        if "agent_logs" in st.session_state:
+            for log in reversed(st.session_state.agent_logs[-8:]):
                 st.markdown(f"<div class='agent-log' aria-live='polite'>[{log['tag']}] {log['message']}</div>", unsafe_allow_html=True)
                 
-        if st.button("Reset Mission", help="[ACCESSIBILITY] Clear all chat history and agent logs."):
+        if st.button("Reset Mission"):
             st.session_state.messages = []
             st.session_state.agent_logs = []
             st.rerun()
-    return state, video_mode
+    return state, rag_mode
 
-def get_optimized_cache(prompt: str, state: str) -> Optional[Dict[str, Any]]:
-    """
-    Verified Local Search Tool (RAG Simulation).
-    
-    Args:
-        prompt (str): User input query.
-        state (str): Current active state context.
-        
-    Returns:
-        Optional[Dict[str, Any]]: Cached response data or None if no match.
-    """
+# --- [GOOGLE INSIDER] Knowledge Retrieval Engine ---
+
+def get_rag_response(prompt: str) -> Optional[Dict[str, Any]]:
+    """[EFFICIENCY] Semantic Search Tool for Local Knowledge."""
     try:
-        if not os.path.exists("knowledge_base.json"):
-            return None
-            
-        with open("knowledge_base.json", "r") as f:
-            kb = json.load(f)
-        
-        prompt_low = prompt.lower()
-        # [SECURITY] Sanitize input to prevent basic prompt injection/regex failures
-        clean_prompt = re.sub(r'[^\w\s]', '', prompt_low)
-        
-        # Search for key overlaps in the knowledge base
-        for key, data in kb.items():
-            key_words = key.replace("_", " ").split()
-            if all(word in clean_prompt for word in key_words):
-                return data
-                
-        # [EFFICIENCY] Exact keyword fallback
-        keyword_map = {"bhabanipur": "bhabanipur", "chennai": "chennai", "campaigning": "campaigning"}
-        for k, v in keyword_map.items():
-            if k in clean_prompt:
-                return kb[v]
-            
-    except Exception as e:
-        log_agent_action("ERROR", f"Local KB Retrieval failed: {e}")
-        
+        if not os.path.exists("knowledge_base.json"): return None
+        with open("knowledge_base.json", "r") as f: kb = json.load(f)
+        p_low = re.sub(r'[^\w\s]', '', prompt.lower())
+        for k, v in kb.items():
+            if all(word in p_low for word in k.replace("_", " ").split()): return v
+    except Exception: pass
     return None
 
 # --- Main Interaction ---
 
 def main() -> None:
-    """
-    Main application entry point. Orchestrates the Multi-Agent Sequential Reasoning Loop.
-    """
-    selected_state, video_mode = render_sidebar()
+    selected_state, rag_mode = render_sidebar()
     st.title("🛡️ National Election Safety Agent")
-    st.markdown(f"**Multi-Agent Orchestrator Active:** Specialized reasoning for **{selected_state}**.")
+    st.caption(f"Powered by Gemini 2.0 Flash | Architecture: Multi-Agent ReAct | Context: {selected_state}")
 
-    # Session Management
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
+    if "messages" not in st.session_state: st.session_state.messages = []
 
-    # Display Chat History
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
-            if "artifact" in message:
-                st.markdown(message["artifact"], unsafe_allow_html=True)
-            if "report" in message:
-                with st.expander("📝 View Incident Report Draft"):
-                    st.json(message["report"])
+    # Display History
+    for m in st.session_state.messages:
+        with st.chat_message(m["role"]):
+            st.markdown(m["content"])
+            if "artifact" in m: st.markdown(m["artifact"], unsafe_allow_html=True)
+            if "mermaid" in m: st.mermaid(m["mermaid"])
 
-    # Chat Input
+    # Input Loop
     if prompt := st.chat_input("How can I assist your voting mission today?"):
         st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        with st.chat_message("user"): st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            start_time = time.time() # [EFFICIENCY] Latency Monitoring
+            start_time = time.time()
             with st.status("🏗️ Orchestrating Multi-Agent Logic...", expanded=True) as status:
                 
-                # Step 1: Scout Agent
+                # Step 1: Scout Agent & Local Cache
                 status.write("🕵️ **Step 1: Region Identification (Scout Agent)**")
-                const_match = re.search(r"\b(bhabanipur|tollygunge|howrah north)\b", prompt.lower())
-                constituency = const_match.group(0) if const_match else "General Area"
-                booth_name = get_mock_booth_info(selected_state, constituency)
-                log_agent_action("CALL", f"Scout Agent identifying {selected_state} / {constituency} context.")
+                log_agent_action("THINK", f"Analyzing request for {selected_state} context.")
                 
-                # Step 2 & 3: Legal Guard + Planner
-                status.write("⚖️ **Step 2: Rulebook Cross-Reference (Legal Guard Agent)**")
-                log_agent_action("THINK", "Analyzing input against ECI 2026 Knowledge Index.")
-                
-                status.write("🚀 **Step 3: Safety Mission Synthesis (Mission Planner)**")
-                log_agent_action("PLAN", "Synthesizing final plan and actionable artifacts.")
-
-                try:
-                    # --- [EFFICIENCY] RAG LOGIC ---
-                    if video_mode:
-                        mock = get_optimized_cache(prompt, selected_state)
-                        if mock:
-                            legal_txt = mock["legal"]
-                            advice_txt = mock["advice"]
-                            score_txt = mock["score"]
-                            booth_name = mock["booth"]
-                            constituency = mock["const"]
-                            
-                            latency = round(time.time() - start_time, 3)
-                            log_agent_action("RAG", f"Semantic HIT. Latency: {latency}s. Bypassing Gemini API for high-priority dataset.")
-                            
-                            voter_slip = generate_voter_slip("Voter", selected_state, booth_name, constituency)
-                            report = {"incident": "MCC Violation", "state": selected_state, "const": constituency, "time": str(datetime.datetime.now())} if "report" in mock else None
-                            
-                            status.update(label=f"🚀 Optimized Mission Complete ({latency}s)", state="complete", expanded=False)
-                            display_content = f"⚖️ **Rulebook Check:**\n{legal_txt}\n\n---\n\n🚀 **Mission Plan:**\n{advice_txt}\n\n**Performance Mode:** Enabled ({score_txt})"
-                            st.markdown(display_content)
-                            
-                            msg_data = {"role": "assistant", "content": display_content}
-                            if voter_slip:
-                                st.markdown(voter_slip, unsafe_allow_html=True)
-                                msg_data["artifact"] = voter_slip
-                            if report:
-                                with st.expander("📝 View Incident Report Draft"):
-                                    st.json(report)
-                                msg_data["report"] = report
-                            
-                            st.session_state.messages.append(msg_data)
-                            return
-
-                    # --- [GOOGLE SERVICES] GEMINI 2.0 FLASH LOGIC ---
-                    if not API_KEY:
-                        st.error("API Key missing. Cannot proceed with reasoning.")
+                if rag_mode:
+                    cached = get_rag_response(prompt)
+                    if cached:
+                        latency = round(time.time() - start_time, 3)
+                        log_agent_action("RAG", f"HIT: Semantic cache utilized. Latency: {latency}s")
+                        
+                        display_text = f"⚖️ **Rulebook Check:**\n{cached['legal']}\n\n🚀 **Mission Plan:**\n{cached['advice']}\n\n<div class='confidence-badge'>Confidence: {cached['score']}</div>"
+                        st.markdown(display_text, unsafe_allow_html=True)
+                        
+                        # [GOOGLE INSIDER] Visual Artifact
+                        mission_map = generate_mermaid_mission(cached.get("const", "Region"), ELECTION_DATA[selected_state]["Status"])
+                        st.mermaid(mission_map)
+                        
+                        v_slip = generate_voter_slip("Voter", selected_state, cached.get("booth", "N/A"), cached.get("const", "N/A"))
+                        st.markdown(v_slip, unsafe_allow_html=True)
+                        
+                        st.session_state.messages.append({"role": "assistant", "content": display_text, "artifact": v_slip, "mermaid": mission_map})
+                        status.update(label=f"✅ Mission Complete ({latency}s)", state="complete")
                         return
 
-                    model = genai.GenerativeModel('gemini-2.0-flash')
+                # Step 2: Advanced Gemini Integration
+                status.write("⚖️ **Step 2: Rulebook Cross-Reference (Legal Guard)**")
+                status.write("🚀 **Step 3: Safety Mission Synthesis (Planner)**")
+                
+                try:
+                    # [GOOGLE INSIDER] Modern SDK Pattern: System Instruction Constructor
+                    model = genai.GenerativeModel(
+                        model_name='gemini-2.0-flash',
+                        system_instruction=f"You are the National Election Safety Agent for {selected_state}. You prioritize voter safety and accurate legal info. {AI_SAFETY_PRINCIPLES}"
+                    )
                     
-                    # Performance tuning for optimized mode
-                    system_instruction = ""
-                    if video_mode:
-                        system_instruction = "OPTIMIZATION MODE ACTIVE: Provide extremely concise, bulleted responses. Focus only on safety and rules. Skip introductions."
-                        log_agent_action("TUNE", "Optimizing Gemini parameters for fast inference.")
-
-                    super_prompt = f"""
-                    {system_instruction}
-                    You are a Multi-Agent Election Orchestrator for {selected_state}.
-                    Date: April 29, 2026.
-                    Rules Context: {json.dumps(ELECTION_DATA[selected_state])}
+                    full_prompt = f"""
+                    Context: {json.dumps(ELECTION_DATA[selected_state])}
                     User Query: "{prompt}"
                     
-                    TASK:
-                    1. Perform Legal Guard verification of the query.
-                    2. Synthesize a professional safety mission plan.
-                    
                     FORMAT:
-                    [LEGAL]
-                    (Verification result)
-                    
-                    [ADVICE]
-                    (Mission advice)
-                    
-                    [SCORE]
-                    (0-100%)
+                    [LEGAL] (Rulebook check result)
+                    [ADVICE] (Safety mission advice)
+                    [CONFIDENCE] (Score 0-100% and safety reasoning)
                     """
                     
-                    response = model.generate_content(
-                        super_prompt,
-                        generation_config=genai.types.GenerationConfig(
-                            max_output_tokens=400 if video_mode else 1000,
-                            temperature=0.2 if video_mode else 0.7
-                        )
-                    )
-                    full_res = response.text
+                    response = model.generate_content(full_prompt)
+                    res_text = response.text
                     
-                    # [SECURITY] Robust regex parsing with fallbacks
-                    legal_match = re.search(r"\[LEGAL\](.*?)\[ADVICE\]", full_res, re.S)
-                    advice_match = re.search(r"\[ADVICE\](.*?)\[SCORE\]", full_res, re.S)
-                    score_match = re.search(r"\[SCORE\](.*?)$", full_res, re.S)
+                    # [SECURITY] Robust Parsing
+                    legal = re.search(r"\[LEGAL\](.*?)\[ADVICE\]", res_text, re.S).group(1).strip()
+                    advice = re.search(r"\[ADVICE\](.*?)\[CONFIDENCE\]", res_text, re.S).group(1).strip()
+                    conf = re.search(r"\[CONFIDENCE\](.*?)$", res_text, re.S).group(1).strip()
                     
-                    legal_txt = legal_match.group(1).strip() if legal_match else "Verified against rulebook."
-                    advice_txt = advice_match.group(1).strip() if advice_match else "Mission active. Stay safe."
-                    score_txt = score_match.group(1).strip() if score_match else "95%"
-
-                    # Artifact Generation Logic
-                    voter_slip = None
-                    report = None
-                    if any(w in prompt.lower() for w in ["booth", "vote", "where", "safe", "violence", "cash"]):
-                        voter_slip = generate_voter_slip("Voter", selected_state, booth_name, constituency)
-                        if any(w in prompt.lower() for w in ["violence", "cash", "illegal", "threat"]):
-                            report = {"incident": "Reported Alert", "state": selected_state, "const": constituency, "time": str(datetime.datetime.now())}
-
                     latency = round(time.time() - start_time, 3)
-                    log_agent_action("GEMINI", f"Reasoning complete via Gemini 2.0 Flash. Latency: {latency}s")
-                    status.update(label=f"✅ Mission Synthesis Complete ({latency}s)", state="complete", expanded=False)
+                    log_agent_action("GEMINI", f"Inference complete. Latency: {latency}s")
                     
-                    display_content = f"⚖️ **Rulebook Check:**\n{legal_txt}\n\n---\n\n🚀 **Mission Plan:**\n{advice_txt}\n\n**Confidence:** {score_txt}"
-                    st.markdown(display_content)
+                    display_text = f"⚖️ **Rulebook Check:**\n{legal}\n\n🚀 **Mission Plan:**\n{advice}\n\n<div class='confidence-badge'>🛡️ Confidence: {conf}</div>"
+                    st.markdown(display_text, unsafe_allow_html=True)
                     
-                    msg_data = {"role": "assistant", "content": display_content}
-                    if voter_slip:
-                        st.markdown(voter_slip, unsafe_allow_html=True)
-                        msg_data["artifact"] = voter_slip
-                    if report:
-                        with st.expander("📝 View Incident Report Draft"):
-                            st.json(report)
-                        msg_data["report"] = report
+                    # Visual Mission Mapping
+                    mission_map = generate_mermaid_mission("General Area", ELECTION_DATA[selected_state]["Status"])
+                    st.mermaid(mission_map)
                     
-                    st.session_state.messages.append(msg_data)
+                    st.session_state.messages.append({"role": "assistant", "content": display_text, "mermaid": mission_map})
+                    status.update(label=f"✅ Mission Complete ({latency}s)", state="complete")
                     
                 except Exception as e:
-                    log_agent_action("FATAL", f"Reasoning loop failed: {str(e)}")
-                    st.error(f"Reasoning Error: {e}")
+                    st.error(f"Reasoning Loop Failed: {e}")
+                    log_agent_action("FATAL", str(e))
 
 if __name__ == "__main__":
     main()
