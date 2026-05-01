@@ -37,11 +37,14 @@ Unlike standard bots, this agent has **Native Python Tools** (`get_booth_locatio
 ### 2. 🆔 Multimodal Vision Readiness
 The **Identity Verification Hub** is structured for **Gemini Vision**. It includes a camera interface and file upload capability, proving the app is ready for future-proof, multi-modal verification.
 
-### 3. 🔎 Live Reasoning Trace & Telemetry
-A dedicated **Live Trace** console in the sidebar provides an "Internal Monologue" of the agent's thoughts, ensuring 100% transparency—a key requirement for Google judges.
+### 3. 🛡️ Safety Shield Moderation Layer
+We implemented a dedicated `shield/` directory with a centralized moderation agent. This layer sanitizes inputs, prevents prompt injection, and ensures all interactions remain within the domain of election safety.
 
 ### 4. 🧠 Agentic Memory (ChatSession)
 Uses the Gemini SDK's `ChatSession` logic to maintain a consistent persona and memory across multiple turns, enabling complex, multi-step voting missions.
+
+### 5. ☁️ Google Cloud Readiness
+Includes a `cloudbuild.yaml` configuration, demonstrating the application's readiness for enterprise-scale deployment using **Google Cloud Build** and **Cloud Run**.
 
 ---
 

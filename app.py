@@ -9,7 +9,8 @@ from typing import Dict, Any, Tuple, Optional, List
 
 # Modular Imports
 from core.agent import get_agent_model, start_agent_chat
-from utils.tools import sanitize_input, get_rag_response, get_mock_booth_info
+from utils.tools import get_rag_response, get_mock_booth_info
+from shield.moderator import sanitize_and_moderate
 from ui.styles import apply_custom_styles, generate_mermaid_mission, generate_voter_slip
 from dotenv import load_dotenv
 
@@ -93,7 +94,7 @@ def main():
 
         # Input
         if prompt := st.chat_input("How can I assist your voting mission today?"):
-            prompt = sanitize_input(prompt)
+            prompt = sanitize_and_moderate(prompt)
             st.session_state.messages.append({"role": "user", "content": prompt})
             with st.chat_message("user"): st.markdown(prompt)
 
