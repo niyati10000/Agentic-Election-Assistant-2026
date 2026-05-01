@@ -1,5 +1,5 @@
 # 🛡️ National Election Safety Agent (2026)
-### *The Ultimate AI Orchestrator for Democratic Integrity*
+### *Advanced Multi-Agent Orchestrator for Election Integrity*
 
 **Challenge Vertical:** Election Safety & Education  
 **Architecture:** Autonomous Agent with Native Function Calling  
@@ -8,8 +8,8 @@
 
 ---
 
-## 🏗️ 1st Place Architecture: The "God Tier" Workflow
-This project utilizes **Autonomous Function Calling**, where Gemini 2.0 Flash acts as the "Brain" and decides when to execute specific tools without human intervention.
+## 🏗️ Enterprise Architecture: Logic & Flow
+This project utilizes **Autonomous Function Calling**, where Gemini 2.0 Flash acts as the central logic unit and decides when to execute specific tools.
 
 ```mermaid
 sequenceDiagram
@@ -64,6 +64,15 @@ Uses the Gemini SDK's `ChatSession` logic to maintain a consistent persona and m
    ```
 
 ---
+
+## 🧠 Architectural Rationale
+- **Why Gemini 2.0 Flash?**: We prioritized Flash for its ultra-low latency and superior **Function Calling** capabilities, essential for real-time safety critical assistants.
+- **Why Modular Logic?**: Separating `core/`, `utils/`, and `ui/` ensures that the assistant can be scaled to support 500+ constituencies without code bloat.
+
+## 🚀 Future Scope
+1. **Live Grounding**: Transitioning from a local `knowledge_base.json` to **Vertex AI Search Grounding** for live election day results.
+2. **Vision-Based ID Verification**: Fully implementing Gemini's Multimodal capabilities to scan and verify Voter IDs within the `Identity Hub`.
+3. **Voice-First Accessibility**: Integrating Google Text-to-Speech (TTS) for elderly and visually impaired voters.
 
 ## ⚖️ License
 Licensed under **Apache 2.0**. Developed for the **Google Antigravity PromptWars Challenge**.

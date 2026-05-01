@@ -25,14 +25,14 @@ else:
     st.error("🛑 API Key Missing. Please check your configuration.")
     st.stop()
 
-# --- [FIRST PLACE] Native Agent Tools ---
+# --- [ORCHESTRATION] Native Agent Tools ---
 def get_booth_location(constituency: str) -> str:
-    """Retrieves the official booth location for a given constituency."""
+    """[TECHNICAL] Retrieves the official booth location for a given constituency."""
     st.session_state.trace.append(f"🔍 [TOOL] Searching booth database for: {constituency}")
     return get_mock_booth_info("", constituency)
 
 def check_election_rules(topic: str) -> str:
-    """Verifies election rules and safety protocols from the ECI 2026 rulebook."""
+    """[INTEGRITY] Verifies election rules and safety protocols from the ECI 2026 rulebook."""
     st.session_state.trace.append(f"⚖️ [TOOL] Cross-referencing ECI Rulebook: {topic}")
     rag = get_rag_response(topic)
     return rag["legal"] if rag else "Standard election protocols apply. Contact 1950 for details."
