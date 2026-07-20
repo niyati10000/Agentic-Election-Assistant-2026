@@ -3,10 +3,12 @@
 
 ---
 
-### Deployment Status
-| Platform | Environment Status | Live Link |
-| :--- | :--- | :--- |
-| **Streamlit Community Cloud** | [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_svg.svg)](https://agentic-assistant-drhhk8qgaf5hssryi6meyb.streamlit.app/) | [Launch Application ➔](https://agentic-assistant-drhhk8qgaf5hssryi6meyb.streamlit.app/) |
+[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_svg.svg)](https://agentic-assistant-drhhk8qgaf5hssryi6meyb.streamlit.app/)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+
+The live application is deployed and accessible at:  
+[https://agentic-assistant-drhhk8qgaf5hssryi6meyb.streamlit.app/](https://agentic-assistant-drhhk8qgaf5hssryi6meyb.streamlit.app/)
 
 ---
 
