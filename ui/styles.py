@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import datetime
 from typing import Tuple
 
@@ -65,3 +66,40 @@ def generate_voter_slip(name: str, state: str, booth: str, constituency: str) ->
         <p style='font-size: 0.7rem; color: #666;'>Verified by National Election Safety Agent (2026)</p>
     </div>
     """
+
+def render_mermaid(code: str, height: int = 350) -> None:
+    """[UX] Renders a Mermaid.js diagram inside Streamlit using a custom HTML component."""
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+      <script>
+        mermaid.initialize({{ startOnLoad: true }});
+      </script>
+      <style>
+        body {{
+          background-color: transparent;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }}
+        #mermaid-container {{
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+        }}
+      </style>
+    </head>
+    <body>
+      <div id="mermaid-container">
+        <div class="mermaid">
+          {code}
+        </div>
+      </div>
+    </body>
+    </html>
+    """
+    components.html(html_code, height=height, scrolling=False)

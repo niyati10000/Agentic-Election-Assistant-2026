@@ -21,8 +21,8 @@ class TestElectionAgentModular(unittest.TestCase):
         # Check if knowledge_base.json exists before testing
         if os.path.exists("knowledge_base.json"):
             result = get_rag_response("bhabanipur booth")
-            if result:
-                self.assertIn("legal", result)
+            self.assertIsNotNone(result)
+            self.assertIn("legal", result)
 
     def test_booth_tool(self):
         """[TOOL] Verify specialized booth locator."""

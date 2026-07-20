@@ -11,7 +11,7 @@ from typing import Dict, Any, Tuple, Optional, List
 from core.agent import get_agent_model, start_agent_chat
 from utils.tools import get_rag_response, get_mock_booth_info
 from shield.moderator import sanitize_and_moderate
-from ui.styles import apply_custom_styles, generate_mermaid_mission, generate_voter_slip
+from ui.styles import apply_custom_styles, generate_mermaid_mission, generate_voter_slip, render_mermaid
 from dotenv import load_dotenv
 
 # --- Initialization ---
@@ -51,7 +51,7 @@ AI_SAFETY = "Neutrality, Accuracy, and Safety are your top priorities. Use funct
 
 def render_telemetry():
     with st.sidebar:
-        st.image("election_hero.png", width=None)
+        st.image("election_hero.png", use_container_width=True)
         st.title("🛡️ Agent Console")
         state = st.selectbox("🌍 State Context:", list(ELECTION_DATA.keys()))
         lang = st.radio("🌐 App Language:", ["English", "हिंदी", "বাংলা"], horizontal=True)
@@ -148,7 +148,7 @@ def main():
         
         st.divider()
         st.subheader("Visual Mission Flow")
-        st.mermaid(generate_mermaid_mission("General Area", ELECTION_DATA[selected_state]["Status"]))
+        render_mermaid(generate_mermaid_mission("General Area", ELECTION_DATA[selected_state]["Status"]))
 
 if __name__ == "__main__":
     main()
