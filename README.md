@@ -1,15 +1,17 @@
-# 🛡️ National Election Safety Agent (2026)
-### *Advanced Multi-Agent Orchestrator for Election Integrity*
-
-**Challenge Vertical:** Election Safety & Education  
-**Architecture:** Autonomous Agent with Native Function Calling  
-**Special Features:** Multimodal Identity Hub & Live Reasoning Trace  
-**Model:** Google Gemini 2.0 Flash
+# National Election Safety Agent (2026)
+> **Enterprise Multi-Agent Orchestrator for Election Integrity and Voter Education**
 
 ---
 
-## 🏗️ Enterprise Architecture: Logic & Flow
-This project utilizes **Autonomous Function Calling**, where Gemini 2.0 Flash acts as the central logic unit and decides when to execute specific tools.
+### Deployment Status
+| Platform | Environment Status | Live Link |
+| :--- | :--- | :--- |
+| **Streamlit Community Cloud** | [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_svg.svg)](https://agentic-assistant-drhhk8qgaf5hssryi6meyb.streamlit.app/) | [Launch Application ➔](https://agentic-assistant-drhhk8qgaf5hssryi6meyb.streamlit.app/) |
+
+---
+
+## Architecture Flow
+The system is built on an autonomous tool-orchestration design. Google Gemini 2.0 Flash coordinates the workflow, dynamically routing queries to native helper tools based on conversation context.
 
 ```mermaid
 sequenceDiagram
@@ -29,53 +31,69 @@ sequenceDiagram
 
 ---
 
-## 💎 Advanced Google Integration Features
+## Major Updates & Refactoring Details
 
-### 1. 🤖 Autonomous Function Calling (Tools)
-Unlike standard bots, this agent has **Native Python Tools** (`get_booth_location`, `check_election_rules`). The AI autonomously chooses the right tool for the job.
+### Dynamic Diagram Engine
+*   **Context:** The application previously crashed with an `AttributeError` when attempting to render regional analytics diagrams using a non-existent `st.mermaid` API.
+*   **Resolution:** Developed a custom sandboxed rendering engine using Streamlit's HTML component. It loads the official `mermaid.js` library via CDN inside an iframe, rendering visual flows dynamically and securely on the client side.
 
-### 2. 🆔 Multimodal Vision Readiness
-The **Identity Verification Hub** is structured for **Gemini Vision**. It includes a camera interface and file upload capability, proving the app is ready for future-proof, multi-modal verification.
-
-### 3. 🛡️ Safety Shield Moderation Layer
-We implemented a dedicated `shield/` directory with a centralized moderation agent. This layer sanitizes inputs, prevents prompt injection, and ensures all interactions remain within the domain of election safety.
-
-### 4. 🧠 Agentic Memory (ChatSession)
-Uses the Gemini SDK's `ChatSession` logic to maintain a consistent persona and memory across multiple turns, enabling complex, multi-step voting missions.
-
-### 5. ☁️ Google Cloud Readiness
-Includes a `cloudbuild.yaml` configuration, demonstrating the application's readiness for enterprise-scale deployment using **Google Cloud Build** and **Cloud Run**.
+### Search Sanity & RAG Integration
+*   **Context:** The database-backed retrieval tool (`get_rag_response`) called an undefined helper (`sanitize_input`), raising standard NameError exceptions that failed silently under bare `except` blocks.
+*   **Resolution:** Connected the RAG helper directly to the centralized validation pipeline (`sanitize_and_moderate`) in the moderation layer.
+*   **Security & Testing:** Updated the unit test suite (`tests/test_tools.py`) to enforce strict assertions, ensuring the search module returns valid payload matches.
 
 ---
 
-## ⚙️ Installation & Usage
+## Core System Capabilities
 
-1. **Clone & Install**:
-   ```bash
-   git clone https://github.com/niyati10000/Agentic-Election-Assistant-2026.git
-   pip install -r requirements.txt
-   ```
-
-2. **Run**:
-   ```bash
-   streamlit run app.py
-   ```
-
-3. **Verify**:
-   ```bash
-   python tests/test_tools.py
-   ```
+*   **Autonomous Tool Use:** The agent dynamically binds and calls local Python tools (`get_booth_location`, `check_election_rules`) based on conversation contexts.
+*   **Input Moderation:** Subsystem checks (`shield/`) intercept malicious prompts, sanitize HTML strings, and prevent prompt injection threats.
+*   **Persistent Sessions:** Leverages Gemini `ChatSession` instances to keep consistent system instructions and thread memory active during interaction loops.
+*   **Production Configurations:** Built-in `cloudbuild.yaml` and `Procfile` templates ensure rapid containerized deployment.
 
 ---
 
-## 🧠 Architectural Rationale
-- **Why Gemini 2.0 Flash?**: We prioritized Flash for its ultra-low latency and superior **Function Calling** capabilities, essential for real-time safety critical assistants.
-- **Why Modular Logic?**: Separating `core/`, `utils/`, and `ui/` ensures that the assistant can be scaled to support 500+ constituencies without code bloat.
+## Setup & Deployment Guide
 
-## 🚀 Future Scope
-1. **Live Grounding**: Transitioning from a local `knowledge_base.json` to **Vertex AI Search Grounding** for live election day results.
-2. **Vision-Based ID Verification**: Fully implementing Gemini's Multimodal capabilities to scan and verify Voter IDs within the `Identity Hub`.
-3. **Voice-First Accessibility**: Integrating Google Text-to-Speech (TTS) for elderly and visually impaired voters.
+### Local Installation
+1.  **Clone the project**:
+    ```bash
+    git clone https://github.com/niyati10000/Agentic-Election-Assistant-2026.git
+    cd Agentic-Election-Assistant-2026
+    ```
+2.  **Install dependencies**:
+    ```bash
+    pip install -r requirements.txt
+    ```
+3.  **Configure environment secrets**:
+    Create a `.env` file in the root directory:
+    ```env
+    GOOGLE_API_KEY=your_gemini_api_key_here
+    ```
 
-## ⚖️ License
-Licensed under **Apache 2.0**. Developed for the **Google Antigravity PromptWars Challenge**.
+### Running the App
+*   **Start the dashboard locally**:
+    ```bash
+    streamlit run app.py
+    ```
+*   **Run verification tests**:
+    ```bash
+    python -m unittest tests/test_tools.py
+    ```
+
+---
+
+## Design Rationale
+*   **Decoupled Structure:** The project is organized cleanly into four layers (`core/` for agent configs, `ui/` for styling, `shield/` for safety rules, and `utils/` for data tools) to allow independent scale-up.
+*   **Optimized Latency:** Gemini 2.0 Flash is selected to ensure sub-second response times during real-time multi-turn reasoning tasks.
+
+---
+
+## Project Roadmap
+1.  **Semantic Grounding:** Migrate from local JSON configurations to enterprise Vertex AI Search groundings.
+2.  **Multimodal ID Processing:** Implement Gemini Vision checks to parse uploaded ID documents in the verification portal.
+3.  **Vocal Assistance:** Integrate text-to-speech features to support visually impaired and elderly users.
+
+---
+
+*Developed for the Google Antigravity PromptWars Challenge. Distributed under the Apache License 2.0.*
