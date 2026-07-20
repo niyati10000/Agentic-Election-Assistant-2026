@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import google.generativeai as genai
 import os
 import sys
@@ -11,7 +12,7 @@ from typing import Dict, Any, Tuple, Optional, List
 from core.agent import get_agent_model, start_agent_chat
 from utils.tools import get_rag_response, get_mock_booth_info
 from shield.moderator import sanitize_and_moderate
-from ui.styles import apply_custom_styles, generate_mermaid_mission, generate_voter_slip, render_mermaid
+from ui.styles import apply_custom_styles, generate_mermaid_mission, generate_voter_slip
 from dotenv import load_dotenv
 
 # --- Initialization ---
@@ -46,6 +47,43 @@ ELECTION_DATA = {
 }
 
 AI_SAFETY = "Neutrality, Accuracy, and Safety are your top priorities. Use functions for any specific data retrieval."
+
+def render_mermaid(code: str, height: int = 350) -> None:
+    """[UX] Renders a Mermaid.js diagram inside Streamlit using a custom HTML component."""
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+      <script>
+        mermaid.initialize({{ startOnLoad: true }});
+      </script>
+      <style>
+        body {{
+          background-color: transparent;
+          margin: 0;
+          padding: 0;
+          overflow: hidden;
+        }}
+        #mermaid-container {{
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          width: 100%;
+          height: 100%;
+        }}
+      </style>
+    </head>
+    <body>
+      <div id="mermaid-container">
+        <div class="mermaid">
+          {code}
+        </div>
+      </div>
+    </body>
+    </html>
+    """
+    components.html(html_code, height=height, scrolling=False)
 
 # --- UI Layout ---
 
